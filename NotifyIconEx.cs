@@ -10,77 +10,80 @@ using System.Windows.Forms;
 
 namespace Micro.WinForms {
     public class NotifyIconEx : Component {
-        public delegate void ContextMenuShowingHandler(object sender, MenuEventHandler args);
+        public delegate void ContextMenuShowingHandler(object sender, MenuEventArgs args);
         public event ContextMenuShowingHandler ContextMenuShowing;
 
-        public NotifyIcon Tray { get; private set; }
+        public NotifyIcon Wrapped { get; private set; }
         public ContextMenuStrip LeftClickMenu { get; set; }
         public ContextMenuStrip RightClickMenu { get; set; }
         public Icon Icon {
-            get => Tray.Icon;
-            set => Tray.Icon = value;
+            get => Wrapped.Icon;
+            set => Wrapped.Icon = value;
         }
         public string Text {
-            get => Tray.Text;
-            set => Tray.Text = value;
+            get => Wrapped.Text;
+            set => Wrapped.Text = value;
         }
         public ToolTipIcon BalloonTipIcon {
-            get => Tray.BalloonTipIcon;
-            set => Tray.BalloonTipIcon = value;
+            get => Wrapped.BalloonTipIcon;
+            set => Wrapped.BalloonTipIcon = value;
         }
         public string BalloonTipText {
-            get => Tray.BalloonTipText;
-            set => Tray.BalloonTipText = value;
+            get => Wrapped.BalloonTipText;
+            set => Wrapped.BalloonTipText = value;
         }
         public string BalloonTipTitle {
-            get => Tray.BalloonTipTitle;
-            set => Tray.BalloonTipTitle = value;
+            get => Wrapped.BalloonTipTitle;
+            set => Wrapped.BalloonTipTitle = value;
         }
         public bool Visible {
-            get => Tray.Visible;
-            set => Tray.Visible = value;
+            get => Wrapped.Visible;
+            set => Wrapped.Visible = value;
         }
         public object Tag {
-            get => Tray.Tag;
-            set => Tray.Tag = value;
+            get => Wrapped.Tag;
+            set => Wrapped.Tag = value;
         }
-        MethodInfo showContextMenu = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly MethodInfo
+            showContextMenu = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public NotifyIconEx(IContainer c = null) {
             if (c != null)
-                Tray = new NotifyIcon(c);
+                Wrapped = new NotifyIcon(c);
             else
-                Tray = new NotifyIcon();
-            Tray.MouseUp += click;
+                Wrapped = new NotifyIcon();
+            Wrapped.MouseUp += click;
         }
         protected override void Dispose(bool disposing) {
             ContextMenuShowing = null;
-            Tray.Dispose();
+            Wrapped.Dispose();
             LeftClickMenu.Dispose();
             RightClickMenu.Dispose();
             base.Dispose(disposing);
         }
 
+        public void Click(MouseEventArgs e)
+            => click(Wrapped, e);
         void click(object sender, MouseEventArgs e) {
-            Tray.ContextMenuStrip = null;
+            Wrapped.ContextMenuStrip = null;
 
             if (e.Button == MouseButtons.Left && LeftClickMenu.Items.Count > 0)
-                Tray.ContextMenuStrip = LeftClickMenu;
+                Wrapped.ContextMenuStrip = LeftClickMenu;
             else if (e.Button == MouseButtons.Right && RightClickMenu.Items.Count > 0)
-                Tray.ContextMenuStrip = RightClickMenu;
+                Wrapped.ContextMenuStrip = RightClickMenu;
 
-            var a = new MenuEventHandler(Tray.ContextMenuStrip);
+            var a = new MenuEventArgs(Wrapped.ContextMenuStrip);
             ContextMenuShowing?.Invoke(this, a);
-            if (!a.Cancel && Tray.ContextMenuStrip != null)
-                showContextMenu.Invoke(Tray, null);
+            if (!a.Cancel && Wrapped.ContextMenuStrip != null)
+                showContextMenu.Invoke(Wrapped, null);
         }
     }
 
-    public class MenuEventHandler : EventArgs {
+    public class MenuEventArgs : EventArgs {
         public ContextMenuStrip Menu { get; private set; }
         public bool Cancel { get; set; }
 
-        public MenuEventHandler(ContextMenuStrip menu)
+        public MenuEventArgs(ContextMenuStrip menu)
             => Menu = menu;
     }
 }

@@ -675,11 +675,12 @@ namespace Micro.WinForms {
     /// Allows object/string binding
     /// </summary>
     public interface IExposable {
-        int ValuesCount { get; }
-        IEnumerable<object> RealValues { get; }
+        int RealValuesCount { get; }
+        int UIValuesCount { get; }
+        IEnumerable<object> RealUIValues { get; }
         IEnumerable<string> TextValues(bool forUI = true);
         void ParseAndSet(string v, int index, bool fromUI = true);
-        bool ShouldBeHidden(int index);
+        bool ShouldBeMasked(int index);
     }
     /// <summary>
     /// Boundable object single sub-item
@@ -689,7 +690,7 @@ namespace Micro.WinForms {
         public new string Text {
             get {
                 string v = Bound.TextValues().ElementAt(pos);
-                if (Bound.ShouldBeHidden(pos))
+                if (Bound.ShouldBeMasked(pos))
                     return string.IsNullOrEmpty(v) ? ListViewEx.NA : ListViewEx.PRESENT;
                 else
                     return v;
@@ -699,8 +700,8 @@ namespace Micro.WinForms {
                 base.Text = Text;
             }
         }
-        public bool ShouldBeHidden => Bound.ShouldBeHidden(pos);
-        public object Value => Bound.RealValues.ElementAt(pos);
+        public bool ShouldBeHidden => Bound.ShouldBeMasked(pos);
+        public object Value => Bound.RealUIValues.ElementAt(pos);
         int pos;
 
         internal protected LVSI_Ex(ListViewItem owner, IExposable value, int index) : base(owner, "") {

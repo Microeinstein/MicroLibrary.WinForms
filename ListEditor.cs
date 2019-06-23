@@ -88,6 +88,7 @@ namespace Micro.WinForms {
             // 
             list.SubItemClicked += list_SubItemClicked;
             list.SubItemEditChange += list_SubItemEditMove;
+            list.SubItemEndEditing += (a, b) => listChanged?.Invoke();
 
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -305,6 +306,7 @@ namespace Micro.WinForms {
             for (int i = n.SubItems.Count; i < list.Columns.Count; i++)
                 n.SubItems.Add("");
             //n.BeginEdit();
+            listChanged?.Invoke();
             list.StartEditing(n, 0);
         }
         bool duplicateSelected() {
